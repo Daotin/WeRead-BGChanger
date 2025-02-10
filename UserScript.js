@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微信阅读背景色修改
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  修改微信阅读网页版的阅读背景色
 // @author       Daotin
 // @match        https://weread.qq.com/*
