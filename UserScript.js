@@ -278,7 +278,7 @@
   function createFullscreenButton() {
     const button = document.createElement('button');
     button.className = 'fullscreen-button readerControls_item';
-    button.innerHTML = '⛶';
+    button.innerHTML = '🔍';
     button.title = '全屏阅读';
     return button;
   }
