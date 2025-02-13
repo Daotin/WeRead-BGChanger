@@ -1,5 +1,5 @@
 // 背景图片base64配置
-export const backgroundImages = [
+window.backgroundImages = [
   {
     name: '竹',
     light:
