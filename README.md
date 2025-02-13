@@ -2,7 +2,8 @@
 
 一个用于修改微信读书网页版背景色的 Tampermonkey 脚本。支持多种预设背景色和背景图片，并能够自动适配深色/浅色模式。
 
-![image](https://github.com/user-attachments/assets/c9e8320a-df10-4a40-bb70-7ec7e46cfe5d)
+![image](https://github.com/user-attachments/assets/ff44ac19-96f3-45fd-9477-e094ec1a6fb7)
+
 
 ## 功能特点
 
