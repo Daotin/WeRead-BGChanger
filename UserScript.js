@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PC微信读书主题增强
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.4.2
 // @description  修改微信读书网页版的阅读背景色
 // @author       Daotin
 // @match        https://weread.qq.com/*
