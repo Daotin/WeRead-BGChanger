@@ -320,6 +320,7 @@
             content.style.backgroundImage = `url(${imageUrl})`;
             content.style.backgroundPosition = "center";
             content.style.backgroundAttachment = "fixed";
+            content.style.backgroundSize = color.size ? color.size : "";
           } else {
             const bgColor = isDark ? color.darkValue : color.value;
             content.style.backgroundImage = "";
