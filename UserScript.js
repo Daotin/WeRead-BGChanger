@@ -180,19 +180,14 @@
     `);
 
   // 预设的背景色选项
+  // 起名可以参考中国传统色：https://chinacolor.org/
   const bgColors = [
-    { name: '默认背景', value: '#ffffff', darkValue: '#1f1f1f' },
-    { name: '杏仁黄', value: '#faf9de', darkValue: '#292916' },
-    { name: '浅黄', value: '#f5f1e8', darkValue: '#292824' },
-    { name: '秋叶褐', value: '#fff2e2', darkValue: '#29231a' },
+    { name: '默认', value: '#ffffff', darkValue: '#1f1f1f' },
+    { name: '护眼绿', value: '#c3e0c5', darkValue: '#1a291b' },
+    { name: '米汤黄', value: '#eee5d3', darkValue: '#292824' },
     { name: '胭脂红', value: '#fde6e0', darkValue: '#291f1d' },
-    { name: '青草绿', value: '#e3edcd', darkValue: '#1f2419' },
-    { name: '灰绿', value: '#d8e7eb', darkValue: '#1a2224' },
-    { name: '草绿', value: '#cce8cf', darkValue: '#1a291b' },
-    { name: '浅灰', value: '#d9e0e8', darkValue: '#1a1d21' },
-    { name: '仿墨水屏', value: '#c0d3d7', darkValue: '#111111' },
-    { name: '茶色', value: '#d2b48c', darkValue: '#241f16' },
-    { name: '午夜', value: '#839496', darkValue: '#002b36' },
+    { name: '月白', value: '#D4E5EF', darkValue: '#111111' },
+    { name: '繱犗', value: '#88BFB8', darkValue: '#241f16' },
     { name: 'DeepSeek蓝', value: '#8093f1', darkValue: '#01167E' }, // #4d6bfe
     { name: 'Claude橙', value: '#E0AB99', darkValue: '#5D2D1D' }, // #ab5235
     // 合并背景图片数据
