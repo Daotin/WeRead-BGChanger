@@ -8,7 +8,7 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @require     https://update.greasyfork.org/scripts/526757/1536467/%E8%83%8C%E6%99%AF%E5%9B%BE%E7%89%87base64%E9%85%8D%E7%BD%AE-%E5%BE%AE%E4%BF%A1%E8%AF%BB%E4%B9%A6%E8%84%9A%E6%9C%AC%E4%BD%BF%E7%94%A8.js
+// @require      https://update.greasyfork.org/scripts/526757/1536467/%E8%83%8C%E6%99%AF%E5%9B%BE%E7%89%87base64%E9%85%8D%E7%BD%AE-%E5%BE%AE%E4%BF%A1%E8%AF%BB%E4%B9%A6%E8%84%9A%E6%9C%AC%E4%BD%BF%E7%94%A8.js
 // @license MIT
 // ==/UserScript==
 
@@ -317,10 +317,11 @@
           const isDark = isDarkMode();
           if (isImage) {
             const imageUrl = isDark ? color.darkValue : color.value;
+            content.style.backgroundColor = "";
             content.style.backgroundImage = `url(${imageUrl})`;
+            content.style.backgroundSize = color.size ? color.size : "";
             content.style.backgroundPosition = "center";
             content.style.backgroundAttachment = "fixed";
-            content.style.backgroundSize = color.size ? color.size : "";
           } else {
             const bgColor = isDark ? color.darkValue : color.value;
             content.style.backgroundImage = "";
