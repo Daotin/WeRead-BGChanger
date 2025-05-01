@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         PC微信读书主题增强
 // @namespace    http://tampermonkey.net/
-// @version      0.4.4
-// @description  修改微信读书网页版的阅读背景色
+// @version      0.4.7
+// @description  修改微信读书网页版的阅读背景色，支持双栏和上下滚动模式
 // @author       Daotin
 // @match        https://weread.qq.com/*
 // @grant        GM_addStyle
@@ -85,8 +85,8 @@
         }
         
         .bg-color-panel {
-            position: absolute;
-            z-index: 110;
+            position: fixed;
+            z-index: 9999;
             transition: all .2s ease-in-out;
             width: 360px;
             box-sizing: border-box;
@@ -177,6 +177,11 @@
         .feedback-link.white:hover {
             text-decoration: underline;
         }
+
+        /* 处理全屏模式下的滚动问题 */
+        .app_content:fullscreen {
+            overflow-y: auto !important;
+        }
     `);
 
   // 预设的背景色选项
@@ -205,11 +210,66 @@
   // localStorage的key
   const STORAGE_KEY = "weread_bg_settings";
 
+  // 全局变量，储存footer检测定时器ID
+  let footerCheckIntervalId = null;
+
+  // 判断当前阅读模式
+  function getReaderMode() {
+    const horizontalReader = document.querySelector(
+      ".readerControls_item.isHorizontalReader"
+    );
+    const normalReader = document.querySelector(
+      ".readerControls_item.isNormalReader"
+    );
+
+    // 默认返回双栏模式
+    return normalReader ? "normal" : "horizontal";
+  }
+
+  // 检查并固定底部栏
+  function fixFooter() {
+    const footer = document.querySelector(".readerFooter");
+    if (footer && getComputedStyle(footer).position !== "fixed") {
+      footer.style.position = "fixed";
+      footer.style.bottom = "0";
+      footer.style.width = "100%";
+      footer.style.zIndex = "999";
+    }
+  }
+
+  // 开始定时检测footer
+  function startFooterCheck() {
+    // 先清除可能存在的定时器
+    stopFooterCheck();
+
+    // 创建新的定时器
+    footerCheckIntervalId = setInterval(fixFooter, 100);
+  }
+
+  // 停止定时检测footer
+  function stopFooterCheck() {
+    if (footerCheckIntervalId) {
+      clearInterval(footerCheckIntervalId);
+      footerCheckIntervalId = null;
+    }
+  }
+
+  // 获取应用背景色的目标元素
+  function getTargetElement() {
+    const mode = getReaderMode();
+    if (mode === "normal") {
+      return document.querySelector(".app_content");
+    } else {
+      return document.querySelector(".readerChapterContent");
+    }
+  }
+
   // 保存背景色设置
   function saveBgSettings(colorIndex) {
     const settings = {
       colorIndex: colorIndex,
       isDark: isDarkMode(),
+      readerMode: getReaderMode(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }
@@ -222,12 +282,8 @@
 
   // 应用背景色
   function applyBgColor(content, colorIndex, isDark) {
-    if (colorIndex === -1 || colorIndex >= bgColors.length) {
-      content.style.backgroundColor = "";
-      content.style.backgroundImage = "";
-      content.style.backgroundSize = "";
-      content.style.backgroundPosition = "";
-      content.style.backgroundAttachment = "";
+    if (!content || colorIndex === -1 || colorIndex >= bgColors.length) {
+      resetBackgroundColor();
       return;
     }
 
@@ -251,7 +307,7 @@
 
   // 重置背景色为默认
   function resetBackgroundColor() {
-    const content = document.querySelector(".readerChapterContent");
+    const content = getTargetElement();
     if (content) {
       content.style.backgroundColor = "";
       content.style.backgroundImage = "";
@@ -313,7 +369,7 @@
       }
 
       option.onclick = () => {
-        const content = document.querySelector(".readerChapterContent");
+        const content = getTargetElement();
         if (content) {
           const isDark = isDarkMode();
           if (isImage) {
@@ -354,7 +410,7 @@
 
     // 获取保存的背景色设置
     const savedSettings = getSavedBgSettings();
-    const content = document.querySelector(".readerChapterContent");
+    const content = getTargetElement();
 
     if (savedSettings && content) {
       // 如果深色模式状态改变，重置背景色
@@ -402,7 +458,7 @@
 
   // 切换全屏状态
   function toggleFullscreen(button) {
-    const content = document.querySelector(".readerChapterContent");
+    const content = getTargetElement();
     if (!content) return;
 
     if (!document.fullscreenElement) {
@@ -410,9 +466,45 @@
         console.log(`Error attempting to enable fullscreen: ${err.message}`);
       });
       button.classList.add("active");
+
+      // 如果是上下滚动模式，处理顶部栏和滚动问题
+      if (getReaderMode() === "normal") {
+        // 确保在全屏模式下内容可以滚动
+        setTimeout(() => {
+          if (content.style.overflowY !== "auto") {
+            content.style.overflowY = "auto";
+          }
+          const topBar = document.querySelector(".readerTopBar");
+          if (topBar) {
+            topBar.style.display = "none";
+          }
+
+          // 固定底部栏并开始定时检测
+          fixFooter();
+          startFooterCheck();
+        }, 100);
+      }
     } else {
       document.exitFullscreen();
       button.classList.remove("active");
+
+      // 如果是上下滚动模式，恢复顶部栏和底部栏
+      if (getReaderMode() === "normal") {
+        const topBar = document.querySelector(".readerTopBar");
+        const footer = document.querySelector(".readerFooter");
+        if (topBar) {
+          topBar.style.display = "";
+        }
+        if (footer) {
+          footer.style.position = "";
+          footer.style.bottom = "";
+          footer.style.width = "";
+          footer.style.zIndex = "";
+        }
+
+        // 停止底部栏检测
+        stopFooterCheck();
+      }
     }
   }
 
@@ -460,10 +552,94 @@
         attributeFilter: ["class"],
       });
 
+      // 监听阅读模式切换
+      const normalReaderButton = document.querySelector(
+        ".readerControls_item.isNormalReader"
+      );
+      const horizontalReaderButton = document.querySelector(
+        ".readerControls_item.isHorizontalReader"
+      );
+
+      if (normalReaderButton && horizontalReaderButton) {
+        const readerModeObserver = new MutationObserver(() => {
+          requestAnimationFrame(() => {
+            // 获取保存的背景色设置
+            const savedSettings = getSavedBgSettings();
+            if (savedSettings) {
+              // 当阅读模式切换时，重新应用背景色
+              const content = getTargetElement();
+              if (content) {
+                applyBgColor(content, savedSettings.colorIndex, isDarkMode());
+                // 更新保存的阅读模式
+                saveBgSettings(savedSettings.colorIndex);
+              }
+            }
+
+            // 检查全屏状态和阅读模式，决定是否需要启动footer检测
+            if (document.fullscreenElement && getReaderMode() === "normal") {
+              fixFooter();
+              startFooterCheck();
+            } else {
+              stopFooterCheck();
+            }
+          });
+        });
+
+        readerModeObserver.observe(normalReaderButton, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+
+        readerModeObserver.observe(horizontalReaderButton, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      }
+
       // 监听全屏状态变化
       document.addEventListener("fullscreenchange", () => {
         if (!document.fullscreenElement) {
           fullscreenButton.classList.remove("active");
+
+          // 退出全屏时，恢复顶部栏和底部栏
+          if (getReaderMode() === "normal") {
+            const topBar = document.querySelector(".readerTopBar");
+            const footer = document.querySelector(".readerFooter");
+
+            if (topBar) {
+              topBar.style.display = "";
+            }
+
+            if (footer) {
+              footer.style.position = "";
+              footer.style.bottom = "";
+              footer.style.width = "";
+              footer.style.zIndex = "";
+            }
+
+            // 恢复滚动行为
+            const content = getTargetElement();
+            if (content) {
+              content.style.overflowY = "";
+            }
+
+            // 停止底部栏检测
+            stopFooterCheck();
+          }
+        } else {
+          // 进入全屏时，如果是上下滚动模式，需要确保内容可滚动并固定底部栏
+          if (getReaderMode() === "normal") {
+            const content = getTargetElement();
+            if (content) {
+              setTimeout(() => {
+                content.style.overflowY = "auto";
+
+                // 固定底部栏并开始定时检测
+                fixFooter();
+                startFooterCheck();
+              }, 100);
+            }
+          }
         }
       });
 
@@ -484,9 +660,16 @@
       const isDark = isDarkMode();
       const options = panel.querySelectorAll(".bg-color-option");
       options.forEach((option, index) => {
-        option.style.backgroundColor = isDark
-          ? bgColors[index].darkValue
-          : bgColors[index].value;
+        const color = bgColors[index];
+        const isImage = color.type === "image";
+
+        if (isImage) {
+          option.style.background = `url(${
+            isDark ? color.darkValue : color.value
+          })`;
+        } else {
+          option.style.backgroundColor = isDark ? color.darkValue : color.value;
+        }
       });
 
       panel.classList.toggle("show");
